@@ -324,9 +324,10 @@ function resize() {
 
 function updatePointer(point) {
     if (!dragging) return;
-    rotationY -= ((point.x - lastPoint.x) / window.innerWidth) * 5;
+    const movement = 5;
+    rotationY -= ((point.x - lastPoint.x) / window.innerWidth) * movement;
     rotationX = Math.max(-1.2, Math.min(1.2,
-        rotationX + ((point.y - lastPoint.y) / window.innerHeight) * 3.5));
+        rotationX + ((point.y - lastPoint.y) / window.innerHeight) * movement));
     lastPoint = point;
 }
 

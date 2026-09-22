@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="Una galaxia de flores amarillas para celebrar a una persona especial.">
+    <meta name="theme-color" content="#000000">
+    <title>Feliz Día de las Flores Amarillas 🌻</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <canvas id="galaxy" aria-hidden="true"></canvas>
+
+    <h1 id="main-title">Feliz Día de las Flores Amarillas 🌻</h1>
+
+    <section id="start-screen" aria-label="Iniciar experiencia">
+        <button id="start-button" type="button" aria-label="Iniciar experiencia">
+            <img class="start-character" src="css/assets/osito-ramo.png" alt="Osito disfrazado de abeja sosteniendo una flor amarilla">
+            <span class="start-text">Toca para iniciar</span>
+        </button>
+    </section>
+
+    <button id="sound-button" type="button" aria-pressed="false" aria-label="Activar música" hidden>
+        🔇
+    </button>
+
+    <p id="fallback" hidden>
+        Tu navegador no puede mostrar la galaxia animada. Recibe igualmente un girasol y todo mi cariño 🌻
+    </p>
+
+    <audio id="audio" loop preload="metadata">
+        <source src="css/assets/musica.m4a" type="audio/mp4">
+    </audio>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

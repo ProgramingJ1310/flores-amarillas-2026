@@ -98,9 +98,9 @@ let targetDistance = 300;
 let currentDistance = 300;
 let rotationX = .2;
 let rotationY = 0;
-let dragging = false;
-let lastPoint = { x: 0, y: 0 };
-let pinchDistance = 0;
+const activePointers = new Map();
+let lastPoint = null;
+let pinchDistance = null;
 let started = false;
 
 function makeGlow() {
@@ -322,13 +322,36 @@ function resize() {
     camera.updateProjectionMatrix();
 }
 
-function updatePointer(point) {
-    if (!dragging) return;
+function getPinchDistance() {
+    const [first, second] = [...activePointers.values()];
+    return Math.hypot(first.x - second.x, first.y - second.y);
+}
+
+function updatePointer(event) {
+    const previousPoint = activePointers.get(event.pointerId);
+    if (!previousPoint) return;
+
+    activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (activePointers.size >= 2) {
+        const distance = getPinchDistance();
+        if (pinchDistance !== null) {
+            targetDistance = Math.max(160, Math.min(600,
+                targetDistance + (pinchDistance - distance) * .7));
+        }
+        pinchDistance = distance;
+        lastPoint = null;
+        return;
+    }
+    if (!lastPoint) {
+        lastPoint = previousPoint;
+        return;
+    }
+
     const movement = 5;
-    rotationY -= ((point.x - lastPoint.x) / window.innerWidth) * movement;
+    rotationY -= ((event.clientX - lastPoint.x) / window.innerWidth) * movement;
     rotationX = Math.max(-1.2, Math.min(1.2,
-        rotationX + ((point.y - lastPoint.y) / window.innerHeight) * movement));
-    lastPoint = point;
+        rotationX + ((event.clientY - lastPoint.y) / window.innerHeight) * movement));
+    lastPoint = { x: event.clientX, y: event.clientY };
 }
 
 function startExperience() {
@@ -362,26 +385,31 @@ soundButton.addEventListener("click", () => {
 });
 
 canvas.addEventListener("pointerdown", (event) => {
-    dragging = true;
-    lastPoint = { x: event.clientX, y: event.clientY };
+    activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     canvas.setPointerCapture(event.pointerId);
+    if (activePointers.size === 1) {
+        lastPoint = { x: event.clientX, y: event.clientY };
+    } else if (activePointers.size === 2) {
+        pinchDistance = getPinchDistance();
+        lastPoint = null;
+    }
 });
-canvas.addEventListener("pointermove", (event) => updatePointer({ x: event.clientX, y: event.clientY }));
-canvas.addEventListener("pointerup", () => { dragging = false; });
-canvas.addEventListener("pointercancel", () => { dragging = false; });
+canvas.addEventListener("pointermove", updatePointer);
+function endPointer(event) {
+    activePointers.delete(event.pointerId);
+    if (activePointers.size < 2) pinchDistance = null;
+    lastPoint = activePointers.size === 1
+        ? [...activePointers.values()][0]
+        : null;
+    if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
+    }
+}
+canvas.addEventListener("pointerup", endPointer);
+canvas.addEventListener("pointercancel", endPointer);
 canvas.addEventListener("wheel", (event) => {
     targetDistance = Math.max(160, Math.min(600, targetDistance + event.deltaY * .25));
 }, { passive: true });
-canvas.addEventListener("touchmove", (event) => {
-    if (event.touches.length !== 2) return;
-    event.preventDefault();
-    const dx = event.touches[0].clientX - event.touches[1].clientX;
-    const dy = event.touches[0].clientY - event.touches[1].clientY;
-    const distance = Math.hypot(dx, dy);
-    if (pinchDistance) targetDistance = Math.max(160, Math.min(600, targetDistance + (pinchDistance - distance) * .5));
-    pinchDistance = distance;
-}, { passive: false });
-canvas.addEventListener("touchend", () => { pinchDistance = 0; }, { passive: true });
 window.addEventListener("resize", resize);
 document.addEventListener("visibilitychange", () => {
     if (!document.hidden && started && !animationFrame) animate();
